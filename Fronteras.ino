@@ -78,6 +78,11 @@ int determinarOrientacion(Point posicionActual, Point posicionDestino) {
 	if (difFila > 0 && difCol < 0) return 8;
 }
 
+void sacaDeSusCasillas(Point posicionActual) {
+	int sacar = 35;
+
+}
+
 void setup() {
 	Serial.begin(9600);
 	Serial.println("Iniciando...");
@@ -100,10 +105,7 @@ void loop() {
 		posDestino.y = command.charAt(3) - '0';
 
 
-		//determinarOrientacion(posActual, posDestino);{
 		int orientacion = determinarOrientacion(posActual, posDestino);
-		//Serial.println("Orientacion: " + String(orientacion));
-		//}
 		switch (orientacion-1)
 		{
 		case NORTE:
@@ -113,9 +115,6 @@ void loop() {
 				bool bordeIzq = posActual.x < 4 ? 1 : 0;
 				// calcula diferencia de longitudes entre centro de la casilla y el borde izquierdo para cada motor
 				motors[i]->mmAbase = (4 - posActual.x) * ladoCasilla + bordeIzq * (ladoCasilla / 2);
-
-
-
 			}
 			break;
 		case NORESTE:
