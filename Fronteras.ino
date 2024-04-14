@@ -13,8 +13,10 @@ struct Point {
 struct Motor {
 	int pin1, pin2, pin3, pin4;
 	unsigned long stepInterval = 1100; // Intervalo entre pasos en microsegundos
-	int stepsRemainingInicial; // Pasos a dar hasta la proyección
-	int stepsRemainingFinal; // Pasos a dar desde la proyección hasta el destino
+	int stepsRemainingHastaBorde; // Pasos a dar hasta el borde de la casilla
+	int stepsRemainingDesdeBorde; // Pasos a dar desde el borde de la casilla hasta el centro
+	int stepsRemainingAbcisaa; // Pasos a dar en la abscisa
+	int stepsRemainingOrdenada; // Pasos a dar en la ordenada
 	int stepsRemainingTotal; // Pasos totales a dar
 	bool direction; // true para adelante, false para atrás
 	unsigned long lastStepTime; // Último momento en que se dio un paso
@@ -52,14 +54,8 @@ void setupMotor(Motor& motor) {
 	pinMode(motor.pin4, OUTPUT);
 }
 
-// Función para calcular la distancia
-float calcularDistancia(float centroX, float centroY, float esquinaX, float esquinaY) {
-	return sqrt(pow(centroX - esquinaX, 2) + pow(centroY - esquinaY, 2));
-}
 
 float medirDistancia(Point centro, Point esquina) {
-	Point cartesianCenter = { centro.x * 70 + 35, centro.y * 70 + 35 };
-	///////////////////////////////////////////////////////////////////////////////////////////
 	return sqrt(pow(centro.x - esquina.x, 2) + pow(centro.y - esquina.y, 2));
 }
 
@@ -78,10 +74,6 @@ int determinarOrientacion(Point posicionActual, Point posicionDestino) {
 	if (difFila > 0 && difCol < 0) return 8;
 }
 
-void sacaDeSusCasillas(Point posicionActual) {
-	int sacar = 35;
-
-}
 
 void setup() {
 	Serial.begin(9600);
@@ -106,40 +98,127 @@ void loop() {
 
 
 		int orientacion = determinarOrientacion(posActual, posDestino);
+		Point cartesianCenter = { posActual.x * 70 + 35, posActual.y * 70 + 35 };
+		Point bordeSup = { cartesianCenter.x, cartesianCenter.y + 35 };
+		Point bordeInf = { cartesianCenter.x, cartesianCenter.y - 35 };
+		Point bordeDer = { cartesianCenter.x + 35, cartesianCenter.y };
+		Point bordeIzq = { cartesianCenter.x - 35, cartesianCenter.y };
+
 		switch (orientacion-1)
 		{
 		case NORTE:
-			Serial.println("Norte");
+			Seri
+				al.println("Norte");
+
 			for (int i = 0; i < 4; i++)
 			{
-				bool bordeIzq = posActual.x < 4 ? 1 : 0;
-				// calcula diferencia de longitudes entre centro de la casilla y el borde izquierdo para cada motor
-				motors[i]->mmAbase = (4 - posActual.x) * ladoCasilla + bordeIzq * (ladoCasilla / 2);
+				float distCentro = medirDistancia(cartesianCenter, esquinas[i]);
+				float distBorde = medirDistancia(bordeSup, esquinas[i]);
+				motors[i]->stepsRemainingHastaBorde = distCentro - distBorde;
+				Serial.println("Distancia centro: " + String(distCentro) + 
+							  " Distancia borde: " + String(distBorde));
+				Serial.println("Pasos iniciales: " + String(motors[i]->stepsRemainingHastaBorde));
+				float abcisaEntreCasillas = medirDistancia(bordeSup, bordeInf);////////////////////////////
+				float ordenadaEntreCasillas = posDestino.y - posActual.y;
+				motors[i]->stepsRemainingAbcisaa = abcisaEntreCasillas * 70;
+				motors[i]->stepsRemainingOrdenada = ordenadaEntreCasillas * 70;
+
 			}
 			break;
+
 		case NORESTE:
 			Serial.println("Noreste");
+			for (int i = 0; i < 4; i++)
+			{
+				float distCentro = medirDistancia(cartesianCenter, esquinas[i]);
+				float distBorde = medirDistancia(bordeDer, esquinas[i]);
+				motors[i]->stepsRemainingHastaBorde = distCentro - distBorde;
+				Serial.println("Distancia centro: " + String(distCentro) +
+							  " Distancia borde: " + String(distBorde));
+				Serial.println("Pasos iniciales: " + String(motors[i]->stepsRemainingHastaBorde));
+			}
 			break;
+
 		case ESTE:
 			Serial.println("Este");
+			for (int i = 0; i < 4; i++)
+			{
+				int distCentro = medirDistancia(cartesianCenter, esquinas[i]);
+				int distBorde = medirDistancia(bordeDer, esquinas[i]);
+				motors[i]->stepsRemainingHastaBorde = distCentro - distBorde;
+				Serial.println("Distancia centro: " + String(distCentro) +
+							  " Distancia borde: " + String(distBorde));
+				Serial.println("Pasos iniciales: " + String(motors[i]->stepsRemainingHastaBorde));
+			}
 			break;
+
 		case SURESTE:
 			Serial.println("Sureste");
+			for (int i = 0; i < 4; i++)
+			{
+				int distCentro = medirDistancia(cartesianCenter, esquinas[i]);
+				int distBorde = medirDistancia(bordeDer, esquinas[i]);
+				motors[i]->stepsRemainingHastaBorde = distCentro - distBorde;
+				Serial.println("Distancia centro: " + String(distCentro) +
+							  " Distancia borde: " + String(distBorde));
+				Serial.println("Pasos iniciales: " + String(motors[i]->stepsRemainingHastaBorde));
+			}
 			break;
+
 		case SUR:
 			Serial.println("Sur");
+			for (int i = 0; i < 4; i++)
+			{
+				int distCentro = medirDistancia(cartesianCenter, esquinas[i]);
+				int distBorde = medirDistancia(bordeInf, esquinas[i]);
+				motors[i]->stepsRemainingHastaBorde = distCentro - distBorde;
+				Serial.println("Distancia centro: " + String(distCentro) +
+							  " Distancia borde: " + String(distBorde));
+				Serial.println("Pasos iniciales: " + String(motors[i]->stepsRemainingHastaBorde));
+			}
 			break;
+
 		case SUROESTE:
 			Serial.println("Suroeste");
+			for (int i = 0; i < 4; i++)
+			{
+				int distCentro = medirDistancia(cartesianCenter, esquinas[i]);
+				int distBorde = medirDistancia(bordeIzq, esquinas[i]);
+				motors[i]->stepsRemainingHastaBorde = distCentro - distBorde;
+				Serial.println("Distancia centro: " + String(distCentro) +
+							  " Distancia borde: " + String(distBorde));
+				Serial.println("Pasos iniciales: " + String(motors[i]->stepsRemainingHastaBorde));
+			}
 			break;
+
 		case OESTE:
 			Serial.println("Oeste");
+			for (int i = 0; i < 4; i++)
+			{
+				int distCentro = medirDistancia(cartesianCenter, esquinas[i]);
+				int distBorde = medirDistancia(bordeIzq, esquinas[i]);
+				motors[i]->stepsRemainingHastaBorde = distCentro - distBorde;
+				Serial.println("Distancia centro: " + String(distCentro) +
+							  " Distancia borde: " + String(distBorde));
+				Serial.println("Pasos iniciales: " + String(motors[i]->stepsRemainingHastaBorde));
+			}
 			break;
+
 		case NOROESTE:
 			Serial.println("Noroeste");
+			for (int i = 0; i < 4; i++)
+			{
+				int distCentro = medirDistancia(cartesianCenter, esquinas[i]);
+				int distBorde = medirDistancia(bordeIzq, esquinas[i]);
+				motors[i]->stepsRemainingHastaBorde = distCentro - distBorde;
+				Serial.println("Distancia centro: " + String(distCentro) +
+							  " Distancia borde: " + String(distBorde));
+				Serial.println("Pasos iniciales: " + String(motors[i]->stepsRemainingHastaBorde));
+			}
 			break;
 
 		default:
+			Serial.println("Orientación no válida");
 			break;
 		}
 	}
